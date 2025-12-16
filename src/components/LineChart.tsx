@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useRef } from 'react'
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -6,9 +6,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  Customized,
 } from 'recharts'
 import './LineChart.css'
 
@@ -178,24 +176,25 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
     })
   }
 
-  const isItemVisible = (airline: Airline): boolean => {
+  const isItemVisible = useCallback((airline: Airline): boolean => {
     if (hiddenGroups.has(airline.group)) return false
     if (hiddenItems.has(airline.code)) return false
     return true
-  }
+  }, [hiddenGroups, hiddenItems])
 
-  const getLineOpacity = (airline: Airline): number => {
-    if (!isItemVisible(airline)) return 0
-    if (!singleAirlineMode) return 1 // Mode classique: pas d'opacité réduite
+  const getLineOpacity = useCallback((airline: Airline): number => {
+    if (hiddenGroups.has(airline.group)) return 0
+    if (hiddenItems.has(airline.code)) return 0
+    if (!singleAirlineMode) return 1
     if (hoveredItem === null) return 1
     if (hoveredItem === airline.code) return 1
     return 0.15
-  }
+  }, [hiddenGroups, hiddenItems, singleAirlineMode, hoveredItem])
 
-  const getLineWidth = (airline: Airline): number => {
+  const getLineWidth = useCallback((airline: Airline): number => {
     if (hoveredItem === airline.code) return 3
     return 2
-  }
+  }, [hoveredItem])
 
 
   // Formater la date à partir de la valeur décimale
@@ -309,23 +308,36 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
     )
   }
 
+  // Throttle pour limiter les mises à jour
+  const lastUpdateRef = useRef<number>(0)
+  const throttleMs = 16 // ~60fps
+
   // Gestion du mouvement de la souris sur le graphique
-  const handleMouseMove = (state: any) => {
+  const handleMouseMove = useCallback((state: any) => {
+    const now = Date.now()
+    if (now - lastUpdateRef.current < throttleMs) return
+    lastUpdateRef.current = now
+
     if (state && state.activeTooltipIndex !== undefined) {
       setActiveIndex(state.activeTooltipIndex)
     }
-  }
+  }, [])
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     setActiveIndex(null)
-    if (!singleAirlineMode) {
-      // En mode classique, pas besoin de reset hoveredItem
-      return
-    }
-  }
+  }, [])
 
-  const operatingAirlines = airlines.filter((a) => a.group === 'operating')
-  const discontinuedAirlines = airlines.filter((a) => a.group === 'discontinued')
+  const operatingAirlines = useMemo(() => airlines.filter((a) => a.group === 'operating'), [airlines])
+  const discontinuedAirlines = useMemo(() => airlines.filter((a) => a.group === 'discontinued'), [airlines])
+
+  // Trier les airlines pour que la ligne survolée soit au-dessus
+  const sortedAirlines = useMemo(() => {
+    return [...airlines].sort((a, b) => {
+      if (a.code === hoveredItem) return 1
+      if (b.code === hoveredItem) return -1
+      return 0
+    })
+  }, [airlines, hoveredItem])
 
   const renderLegend = () => {
     return (
@@ -411,14 +423,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
               isAnimationActive={false}
             />
             {/* Lignes triées pour que la ligne survolée soit au-dessus */}
-            {[...airlines]
-              .sort((a, b) => {
-                // La ligne survolée doit être rendue en dernier (au-dessus)
-                if (a.code === hoveredItem) return 1
-                if (b.code === hoveredItem) return -1
-                return 0
-              })
-              .map((airline) => (
+            {sortedAirlines.map((airline) => (
               <React.Fragment key={airline.code}>
                 {/* Ligne invisible pour zone de hover plus grande */}
                 <Line
@@ -442,42 +447,22 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
                   strokeWidth={getLineWidth(airline)}
                   strokeOpacity={getLineOpacity(airline)}
                   strokeDasharray={airline.group === 'discontinued' ? '5 5' : undefined}
-                  dot={(props: any) => {
-                    const { cx, cy, index } = props
-                    // Mode Single: point uniquement sur la ligne survolée
-                    if (singleAirlineMode) {
-                      if (hoveredItem === airline.code && activeIndex === index) {
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={6}
-                            fill={airline.color}
-                            stroke="#fff"
-                            strokeWidth={2}
-                            style={{ pointerEvents: 'none' }}
-                          />
-                        )
-                      }
-                    } else {
-                      // Mode classique: points sur toutes les lignes visibles
-                      if (activeIndex === index && isItemVisible(airline)) {
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={4}
-                            fill={airline.color}
-                            stroke="#fff"
-                            strokeWidth={2}
-                            style={{ pointerEvents: 'none' }}
-                          />
-                        )
-                      }
-                    }
-                    return <circle cx={cx} cy={cy} r={0} />
-                  }}
-                  activeDot={false}
+                  dot={false}
+                  activeDot={
+                    activeIndex !== null && (
+                      singleAirlineMode
+                        ? hoveredItem === airline.code
+                        : isItemVisible(airline)
+                    )
+                      ? {
+                          r: singleAirlineMode ? 6 : 4,
+                          fill: airline.color,
+                          stroke: '#fff',
+                          strokeWidth: 2,
+                          style: { pointerEvents: 'none' },
+                        }
+                      : false
+                  }
                   hide={!isItemVisible(airline)}
                   style={{ pointerEvents: 'none' }}
                   isAnimationActive={false}
