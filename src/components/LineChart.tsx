@@ -432,6 +432,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
                   hide={!isItemVisible(airline)}
                   onMouseEnter={() => setHoveredItem(airline.code)}
                   onMouseLeave={() => setHoveredItem(null)}
+                  isAnimationActive={false}
                 />
                 {/* Ligne visible */}
                 <Line
@@ -479,6 +480,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
                   activeDot={false}
                   hide={!isItemVisible(airline)}
                   style={{ pointerEvents: 'none' }}
+                  isAnimationActive={false}
                 />
               </React.Fragment>
             ))}
