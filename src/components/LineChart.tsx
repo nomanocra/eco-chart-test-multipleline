@@ -385,8 +385,10 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
                 onMouseLeave={() => setHoveredItem(null)}
               >
                 <span
-                  className="legend-color"
-                  style={{ backgroundColor: airline.color }}
+                  className="legend-color legend-color-dashed"
+                  style={{
+                    backgroundImage: `repeating-linear-gradient(90deg, ${airline.color} 0px, ${airline.color} 3px, transparent 3px, transparent 6px)`
+                  }}
                 />
                 <span className="legend-label">{airline.code}</span>
               </div>
