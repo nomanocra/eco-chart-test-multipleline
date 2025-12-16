@@ -386,7 +386,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
               >
                 <span
                   className="legend-color"
-                  style={{ backgroundColor: airline.color, border: '1px dashed #999' }}
+                  style={{ backgroundColor: airline.color }}
                 />
                 <span className="legend-label">{airline.code}</span>
               </div>
