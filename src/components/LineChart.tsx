@@ -188,7 +188,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
     if (!singleAirlineMode) return 1
     if (hoveredItem === null) return 1
     if (hoveredItem === airline.code) return 1
-    return 0.15
+    return 0.08
   }, [hiddenGroups, hiddenItems, singleAirlineMode, hoveredItem])
 
   const getLineWidth = useCallback((airline: Airline): number => {
