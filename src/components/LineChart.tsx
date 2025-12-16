@@ -22,35 +22,35 @@ interface Airline {
   group: 'operating' | 'discontinued'
 }
 
-// Couleurs normales pour les Operating Airlines
+// Colors for Operating Airlines
 const operatingColors = [
-  '#1f77b4', // Bleu foncé
-  '#2ca02c', // Vert
+  '#1f77b4', // Dark blue
+  '#2ca02c', // Green
   '#ff7f0e', // Orange
-  '#d62728', // Rouge
-  '#9467bd', // Violet
-  '#8c564b', // Marron
-  '#e377c2', // Rose
-  '#7f7f7f', // Gris
-  '#bcbd22', // Jaune-vert
+  '#d62728', // Red
+  '#9467bd', // Purple
+  '#8c564b', // Brown
+  '#e377c2', // Pink
+  '#7f7f7f', // Gray
+  '#bcbd22', // Yellow-green
   '#17becf', // Cyan
 ]
 
-// Couleurs pastel pour les Discontinued Airlines
+// Pastel colors for Discontinued Airlines
 const discontinuedColors = [
-  '#aec7e8', // Bleu pastel
-  '#98df8a', // Vert pastel
-  '#ffbb78', // Orange pastel
-  '#ff9896', // Rouge pastel
-  '#c5b0d5', // Violet pastel
-  '#c49c94', // Marron pastel
-  '#f7b6d3', // Rose pastel
-  '#c7c7c7', // Gris pastel
-  '#dbdb8d', // Jaune-vert pastel
-  '#9edae5', // Cyan pastel
+  '#aec7e8', // Pastel blue
+  '#98df8a', // Pastel green
+  '#ffbb78', // Pastel orange
+  '#ff9896', // Pastel red
+  '#c5b0d5', // Pastel purple
+  '#c49c94', // Pastel brown
+  '#f7b6d3', // Pastel pink
+  '#c7c7c7', // Pastel gray
+  '#dbdb8d', // Pastel yellow-green
+  '#9edae5', // Pastel cyan
 ]
 
-// Génération des codes d'airlines
+// Generate airline codes
 const generateAirlines = (): Airline[] => {
   const operatingAirlines: Airline[] = ['LX', 'BA', 'AF', 'LH', 'KL', 'IB'].map(
     (code, index) => ({
@@ -73,21 +73,21 @@ const generateAirlines = (): Airline[] => {
   return [...operatingAirlines, ...discontinuedAirlines]
 }
 
-// Génération de données mensuelles avec transitions douces
+// Generate monthly data with smooth transitions
 const generateData = (airlines: Airline[]): DataPoint[] => {
   const years = Array.from({ length: 15 }, (_, i) => 2010 + i)
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
   const data: DataPoint[] = []
 
-  // Stocker la dernière valeur par airline pour limiter les variations
+  // Store last value per airline to limit variations
   const lastValues: { [key: string]: number } = {}
 
-  // Initialiser les valeurs de départ
+  // Initialize starting values
   airlines.forEach((airline) => {
     if (airline.group === 'operating') {
-      lastValues[airline.code] = Math.random() * 2000 + 2000 // 2000-4000
+      lastValues[airline.code] = Math.random() * 2000 + 2000
     } else {
-      lastValues[airline.code] = Math.random() * 1500 + 1000 // 1000-2500
+      lastValues[airline.code] = Math.random() * 1500 + 1000
     }
   })
 
@@ -98,33 +98,33 @@ const generateData = (airlines: Airline[]): DataPoint[] => {
       airlines.forEach((airline) => {
         const lastValue = lastValues[airline.code]
 
-        // Variation max de 8% par mois pour des lignes cohérentes
+        // Max 8% variation per month for coherent lines
         const maxVariation = lastValue * 0.08
         const variation = (Math.random() - 0.5) * 2 * maxVariation
 
         let newValue = lastValue + variation
 
-        // Appliquer les tendances
+        // Apply trends
         if (airline.group === 'operating') {
-          // COVID drop en 2020
+          // COVID drop in 2020
           if (year === 2020 && month >= 3 && month <= 6) {
             newValue *= 0.85
           }
-          // Reprise progressive après COVID
+          // Progressive recovery after COVID
           if (year === 2021 || (year === 2022 && month <= 6)) {
             newValue *= 1.02
           }
-          // Maintenir dans une fourchette raisonnable
+          // Keep within reasonable range
           newValue = Math.max(800, Math.min(5500, newValue))
         } else {
-          // Discontinued: déclin progressif après 2015
+          // Discontinued: gradual decline after 2015
           if (year > 2015) {
-            newValue *= 0.997 // Déclin lent mais constant
+            newValue *= 0.997 // Slow but constant decline
           }
           if (year > 2018) {
             newValue *= 0.995
           }
-          // Maintenir dans une fourchette raisonnable
+          // Keep within reasonable range
           newValue = Math.max(100, Math.min(3500, newValue))
         }
 
@@ -197,7 +197,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
   }, [hoveredItem])
 
 
-  // Formater la date à partir de la valeur décimale
+  // Format date from decimal year value
   const formatDate = (yearDecimal: number): string => {
     const year = Math.floor(yearDecimal)
     const monthIndex = Math.round((yearDecimal - year) * 12)
@@ -205,14 +205,14 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
     return `${monthNames[monthIndex]} ${year}`
   }
 
-  // Tooltip personnalisé
+  // Custom tooltip
   const CustomTooltip = () => {
     if (activeIndex === null) return null
 
     const dataPoint = data[activeIndex]
     if (!dataPoint) return null
 
-    // Mode Single Airline
+    // Single Airline mode
     if (singleAirlineMode) {
       if (!hoveredItem) return null
 
@@ -255,7 +255,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
       )
     }
 
-    // Mode classique - afficher toutes les airlines visibles
+    // Classic mode - show all visible airlines
     const visibleAirlines = airlines.filter((a) => isItemVisible(a))
     if (visibleAirlines.length === 0) return null
 
@@ -308,11 +308,11 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
     )
   }
 
-  // Throttle pour limiter les mises à jour
+  // Throttle to limit updates
   const lastUpdateRef = useRef<number>(0)
   const throttleMs = 16 // ~60fps
 
-  // Gestion du mouvement de la souris sur le graphique
+  // Handle mouse movement on chart
   const handleMouseMove = useCallback((state: any) => {
     const now = Date.now()
     if (now - lastUpdateRef.current < throttleMs) return
@@ -330,7 +330,7 @@ const LineChart: React.FC<LineChartProps> = ({ singleAirlineMode }) => {
   const operatingAirlines = useMemo(() => airlines.filter((a) => a.group === 'operating'), [airlines])
   const discontinuedAirlines = useMemo(() => airlines.filter((a) => a.group === 'discontinued'), [airlines])
 
-  // Trier les airlines pour que la ligne survolée soit au-dessus
+  // Sort airlines so hovered line is rendered on top
   const sortedAirlines = useMemo(() => {
     return [...airlines].sort((a, b) => {
       if (a.code === hoveredItem) return 1
